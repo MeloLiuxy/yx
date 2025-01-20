@@ -49,7 +49,8 @@ def main():
             # 输出结果
             st.write(f"从序号 {start_index} 到 {end_index} 的总位移: {total_displacement:.2f} 米")
             st.write(f"该段的平均速度: {average_speed:.2f} 米/秒")
-            st.write(f"爱你哟宵（宿舍楼下520心形蜡烛版")
+
+
 
 if __name__ == '__main__':
     main()
