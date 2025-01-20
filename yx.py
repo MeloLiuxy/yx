@@ -44,7 +44,7 @@ def main():
 
             # 输出调试信息：显示选中的数据
             st.write(f"从序号 {start_index} 到 {end_index} 的数据预览：")
-            st.write(subset_data.head())
+            st.write(subset_data[['Frame', 'x', 'y', 'z']])
 
             # 获取 x, y, z 坐标
             x = subset_data['x'].values
@@ -54,10 +54,15 @@ def main():
             # 计算该段位移
             total_displacement = 0
             for i in range(1, len(x)):
-                distance = np.sqrt((x[i] - x[i-1])**2 + (y[i] - y[i-1])**2 + (z[i] - z[i-1])**2)
+                dx = x[i] - x[i-1]
+                dy = y[i] - y[i-1]
+                dz = z[i] - z[i-1]
+                st.write(f"第 {i} 步: dx={dx}, dy={dy}, dz={dz}")  # 调试信息
+                distance = np.sqrt(dx**2 + dy**2 + dz**2)
                 total_displacement += distance
 
             # 计算该段的速度（总位移 / 时间间隔）
+            # 需要确保时间计算准确
             total_time = (end_index - start_index + 1) * time_interval
             average_speed = total_displacement / total_time
 
@@ -67,3 +72,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
