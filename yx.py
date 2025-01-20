@@ -13,7 +13,7 @@ def load_data():
 
 # 主函数
 def main():
-    st.title("1⃣💖💖💖🐑🌃")
+    st.title("💖💖💖🐑🌃")
 
     # 加载数据
     data = load_data()
