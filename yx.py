@@ -19,6 +19,17 @@ def main():
     data = load_data()
 
     if data is not None:
+        # 显示数据的列名和数据类型
+        st.write("数据列名:", data.columns)
+        st.write("数据类型:", data.dtypes)
+
+        # 检查是否包含所需的列
+        required_columns = ['Frame', 'x', 'y', 'z']
+        for col in required_columns:
+            if col not in data.columns:
+                st.error(f"缺少必要的列：{col}")
+                return
+
         st.write("刘小旖辛苦了！以下是数据预览：")
         st.write(data.head())
 
@@ -30,6 +41,10 @@ def main():
         if st.button("计算速度"):
             # 根据序号范围获取数据
             subset_data = data[(data['Frame'] >= start_index) & (data['Frame'] <= end_index)]
+
+            # 输出调试信息：显示选中的数据
+            st.write(f"从序号 {start_index} 到 {end_index} 的数据预览：")
+            st.write(subset_data.head())
 
             # 获取 x, y, z 坐标
             x = subset_data['x'].values
@@ -49,8 +64,6 @@ def main():
             # 输出结果
             st.write(f"从序号 {start_index} 到 {end_index} 的总位移: {total_displacement:.2f} 米")
             st.write(f"该段的平均速度: {average_speed:.2f} 米/秒")
-
-
 
 if __name__ == '__main__':
     main()
