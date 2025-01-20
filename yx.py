@@ -7,7 +7,7 @@ def load_data():
     uploaded_file = st.file_uploader("选择一个 Excel 文件", type=["xlsx"])
     if uploaded_file is not None:
         # 读取 Excel 文件
-        data = pd.read_excel(uploaded_file)
+        data = pd.read_excel(uploaded_file, engine='openpyxl')
         return data
     return None
 
