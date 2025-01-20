@@ -13,13 +13,13 @@ def load_data():
 
 # 主函数
 def main():
-    st.title("计算位移和速度")
+    st.title("刘小旖辛苦了")
 
     # 加载数据
     data = load_data()
 
     if data is not None:
-        st.write("文件已成功上传！以下是数据预览：")
+        st.write("刘小旖辛苦了！以下是数据预览：")
         st.write(data.head())
 
         # 输入序号范围和时间间隔
@@ -49,6 +49,7 @@ def main():
             # 输出结果
             st.write(f"从序号 {start_index} 到 {end_index} 的总位移: {total_displacement:.2f} 米")
             st.write(f"该段的平均速度: {average_speed:.2f} 米/秒")
+            st.write(f"爱你哟宵（宿舍楼下520心形蜡烛版")
 
 if __name__ == '__main__':
     main()
