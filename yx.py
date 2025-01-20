@@ -42,9 +42,7 @@ def main():
             # 根据序号范围获取数据
             subset_data = data[(data['Frame'] >= start_index) & (data['Frame'] <= end_index)]
 
-            # 输出调试信息：显示选中的数据
-            st.write(f"从序号 {start_index} 到 {end_index} 的数据预览：")
-            st.write(subset_data[['Frame', 'x', 'y', 'z']])
+        
 
             # 获取 x, y, z 坐标
             x = subset_data['x'].values
