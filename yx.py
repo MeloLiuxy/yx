@@ -17,7 +17,7 @@ def load_position_data():
 
 # 上传时间数据并读取
 def load_time_data():
-    uploaded_time_file = st.file_uploader("辛苦您上传您的时间⏱️数据文件", type=["xlsx", "csv"])
+    uploaded_time_file = st.file_uploader("😻辛苦您上传您的时间⏱️数据文件", type=["xlsx", "csv"])
     if uploaded_time_file is not None:
         # 读取 Excel 或 CSV 文件
         time_data = pd.read_excel(uploaded_time_file) if uploaded_time_file.name.endswith('.xlsx') else pd.read_csv(uploaded_time_file)
@@ -64,7 +64,7 @@ def main():
     time_data = load_time_data()
 
     if position_data is not None and time_data is not None:
-        st.write("再辛苦您一下，看一眼🙈位置数据预览：")
+        st.write("🐯再辛苦您一下，看一眼🙈位置数据预览：")
         st.write(position_data.head())
 
         st.write("👭最后看一眼时间数据预览：")
@@ -73,7 +73,7 @@ def main():
         # 输入查询的 Frame
         frame = st.number_input("高抬贵手🤸下请您输入查询的帧（Frame）：", min_value=1, max_value=len(position_data), value=1)
 
-        if st.button("你真棒！终于计算出了瞬时速度💖~"):
+        if st.button("👅你真棒！终于计算出了瞬时速度💖~"):
             instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
             if instantaneous_speed is not None:
                 st.write(f"帧 {frame} 的瞬时速度为: {instantaneous_speed:.6f} 米/秒")
