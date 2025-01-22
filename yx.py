@@ -34,8 +34,25 @@ def load_time_data(uploaded_file):
         return data
     return None
 
+# 清理列名，去除多余的空格等
+def clean_column_names(data):
+    data.columns = data.columns.str.strip()  # 去除列名两端的空格
+    return data
+
 # 合并位置数据和时间数据
 def merge_data(position_data, time_data):
+    # 清理列名
+    position_data = clean_column_names(position_data)
+    time_data = clean_column_names(time_data)
+    
+    # 确保位置数据和时间数据中有 'File' 和 'Frame' 列
+    if 'File' not in position_data.columns or 'Frame' not in position_data.columns:
+        st.error("位置数据中缺少 'File' 或 'Frame' 列")
+        return None
+    if 'File' not in time_data.columns or 'Frame' not in time_data.columns:
+        st.error("时间数据中缺少 'File' 或 'Frame' 列")
+        return None
+    
     # 合并数据，确保根据 File 和 Frame 进行连接
     merged_data = pd.merge(position_data, time_data, on=['File', 'Frame'], how='inner')
     return merged_data
@@ -93,18 +110,19 @@ def main():
 
                     # 合并位置数据和时间数据
                     merged_data = merge_data(position_data, time_data)
-                    st.write("合并后的数据：")
-                    st.write(merged_data.head())
+                    if merged_data is not None:
+                        st.write("合并后的数据：")
+                        st.write(merged_data.head())
 
-                    # 输入 Frame 数据
-                    frame = st.number_input(f"请输入时刻（Frame）编号：", min_value=1, max_value=len(merged_data), value=1)
+                        # 输入 Frame 数据
+                        frame = st.number_input(f"请输入时刻（Frame）编号：", min_value=1, max_value=len(merged_data), value=1)
 
-                    if st.button("计算瞬时速度"):
-                        # 计算瞬时速度
-                        instantaneous_speed = calculate_instantaneous_speed(merged_data, frame)
+                        if st.button("计算瞬时速度"):
+                            # 计算瞬时速度
+                            instantaneous_speed = calculate_instantaneous_speed(merged_data, frame)
 
-                        if instantaneous_speed is not None:
-                            st.write(f"第 {frame} 时刻的瞬时速度为: {instantaneous_speed:.6f} 米/秒")
+                            if instantaneous_speed is not None:
+                                st.write(f"第 {frame} 时刻的瞬时速度为: {instantaneous_speed:.6f} 米/秒")
     
 if __name__ == '__main__':
     main()
