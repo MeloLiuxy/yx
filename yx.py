@@ -2,127 +2,75 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# 读取位置数据文件
-def load_position_data(uploaded_file):
-    if uploaded_file is not None:
-        if uploaded_file.name.endswith('.xlsx'):
-            data = pd.read_excel(uploaded_file, header=0)
-        elif uploaded_file.name.endswith('.txt'):
-            try:
-                data = pd.read_csv(uploaded_file, header=0, delimiter='\t')
-            except pd.errors.ParserError:
-                data = pd.read_csv(uploaded_file, header=0, delim_whitespace=True)
-        else:
-            st.error("只支持 .xlsx 或 .txt 文件")
-            return None
-        return data
+# 上传位置数据并读取
+def load_position_data():
+    uploaded_position_file = st.file_uploader("上传位置数据文件", type=["xlsx", "csv"])
+    if uploaded_position_file is not None:
+        # 读取 Excel 或 CSV 文件
+        position_data = pd.read_excel(uploaded_position_file) if uploaded_position_file.name.endswith('.xlsx') else pd.read_csv(uploaded_position_file)
+        
+        # 清理列名中的多余空格
+        position_data.columns = position_data.columns.str.strip()
+        
+        return position_data
     return None
 
-# 读取时间数据文件
-def load_time_data(uploaded_file):
-    if uploaded_file is not None:
-        if uploaded_file.name.endswith('.xlsx'):
-            data = pd.read_excel(uploaded_file, header=0)
-        elif uploaded_file.name.endswith('.txt'):
-            try:
-                data = pd.read_csv(uploaded_file, header=0, delimiter='\t')
-            except pd.errors.ParserError:
-                data = pd.read_csv(uploaded_file, header=0, delim_whitespace=True)
-        else:
-            st.error("只支持 .xlsx 或 .txt 文件")
-            return None
-        return data
+# 上传时间数据并读取
+def load_time_data():
+    uploaded_time_file = st.file_uploader("上传时间数据文件", type=["xlsx", "csv"])
+    if uploaded_time_file is not None:
+        # 读取 Excel 或 CSV 文件
+        time_data = pd.read_excel(uploaded_time_file) if uploaded_time_file.name.endswith('.xlsx') else pd.read_csv(uploaded_time_file)
+        
+        # 清理列名中的多余空格
+        time_data.columns = time_data.columns.str.strip()
+
+        return time_data
     return None
-
-# 清理列名，去除多余的空格等
-def clean_column_names(data):
-    data.columns = data.columns.str.strip()  # 去除列名两端的空格
-    return data
-
-# 合并位置数据和时间数据
-def merge_data(position_data, time_data):
-    # 清理列名
-    position_data = clean_column_names(position_data)
-    time_data = clean_column_names(time_data)
-    
-    # 确保位置数据和时间数据中有 'File' 和 'Frame' 列
-    if 'File' not in position_data.columns or 'Frame' not in position_data.columns:
-        st.error("位置数据中缺少 'File' 或 'Frame' 列")
-        return None
-    if 'File' not in time_data.columns or 'Frame' not in time_data.columns:
-        st.error("时间数据中缺少 'File' 或 'Frame' 列")
-        return None
-    
-    # 合并数据，确保根据 File 和 Frame 进行连接
-    merged_data = pd.merge(position_data, time_data, on=['File', 'Frame'], how='inner')
-    return merged_data
 
 # 计算瞬时速度
-def calculate_instantaneous_speed(merged_data, frame):
-    # 获取对应Frame的 X, Y, Z 和 Time 数据
-    x = merged_data['X'].values
-    y = merged_data['Y'].values
-    z = merged_data['Z'].values
-    time = merged_data['Time'].values
+def calculate_instantaneous_speed(position_data, time_data, frame):
+    # 查询位置数据和时间数据对应帧的数据
+    position_frame_data = position_data[position_data['Frame'] == frame]
+    time_frame_data = time_data[time_data['Frame'] == frame]
+
+    if position_frame_data.empty or time_frame_data.empty:
+        return None  # 如果该帧的数据不存在
     
-    # 确保 Frame 在有效范围内
-    if frame > 0 and frame < len(x):
-        delta_x = x[frame] - x[frame - 1]
-        delta_y = y[frame] - y[frame - 1]
-        delta_z = z[frame] - z[frame - 1]
-        
-        # 位移计算
-        displacement = np.sqrt(delta_x**2 + delta_y**2 + delta_z**2)
-
-        # 时间差
-        delta_time = time[frame] - time[frame - 1]
-
-        # 瞬时速度
-        instantaneous_speed = displacement / delta_time
-        return instantaneous_speed
-    else:
-        st.error("无效的 Frame 数据")
-        return None
+    # 提取位置和时间数据
+    x, y, z = position_frame_data['X'].values[0], position_frame_data['Y'].values[0], position_frame_data['Z'].values[0]
+    time = time_frame_data['0'].values[0]  # 假设时间在 '0' 列中
+    
+    # 计算瞬时速度（假设每帧之间的时间间隔为常数）
+    speed = np.sqrt(x**2 + y**2 + z**2) / time if time != 0 else 0
+    
+    return speed
 
 # 主函数
 def main():
-    st.title("瞬时速度计算器")
+    st.title("瞬时速度计算")
 
-    # 上传位置数据文件
-    uploaded_position_file = st.file_uploader("上传位置数据文件", type=["xlsx", "txt"])
-    
-    if uploaded_position_file is not None:
-        position_data = load_position_data(uploaded_position_file)
+    # 加载位置数据和时间数据
+    position_data = load_position_data()
+    time_data = load_time_data()
 
-        if position_data is not None:
-            st.write("位置数据预览：")
-            st.write(position_data.head())
+    if position_data is not None and time_data is not None:
+        st.write("位置数据预览：")
+        st.write(position_data.head())
 
-            # 上传时间数据文件
-            uploaded_time_file = st.file_uploader("上传时间数据文件", type=["xlsx", "txt"])
-            
-            if uploaded_time_file is not None:
-                time_data = load_time_data(uploaded_time_file)
+        st.write("时间数据预览：")
+        st.write(time_data.head())
 
-                if time_data is not None:
-                    st.write("时间数据预览：")
-                    st.write(time_data.head())
+        # 输入查询的 Frame
+        frame = st.number_input("请输入查询的帧（Frame）：", min_value=1, max_value=len(position_data), value=1)
 
-                    # 合并位置数据和时间数据
-                    merged_data = merge_data(position_data, time_data)
-                    if merged_data is not None:
-                        st.write("合并后的数据：")
-                        st.write(merged_data.head())
+        if st.button("计算瞬时速度"):
+            instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
+            if instantaneous_speed is not None:
+                st.write(f"帧 {frame} 的瞬时速度为: {instantaneous_speed:.6f} 米/秒")
+            else:
+                st.write("该帧的数据不存在。")
 
-                        # 输入 Frame 数据
-                        frame = st.number_input(f"请输入时刻（Frame）编号：", min_value=1, max_value=len(merged_data), value=1)
-
-                        if st.button("计算瞬时速度"):
-                            # 计算瞬时速度
-                            instantaneous_speed = calculate_instantaneous_speed(merged_data, frame)
-
-                            if instantaneous_speed is not None:
-                                st.write(f"第 {frame} 时刻的瞬时速度为: {instantaneous_speed:.6f} 米/秒")
-    
 if __name__ == '__main__':
     main()
+
