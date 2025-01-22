@@ -24,7 +24,10 @@ def load_time_data():
         
         # 清理列名中的多余空格
         time_data.columns = time_data.columns.str.strip()
-
+        
+        # 打印列名以检查
+        st.write("时间数据列名：", time_data.columns)
+        
         return time_data
     return None
 
