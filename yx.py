@@ -39,7 +39,14 @@ def calculate_instantaneous_speed(position_data, time_data, frame):
     
     # 提取位置和时间数据
     x, y, z = position_frame_data['X'].values[0], position_frame_data['Y'].values[0], position_frame_data['Z'].values[0]
-    time = time_frame_data['0'].values[0]  # 假设时间在 '0' 列中
+    
+    # 假设时间数据的列名为 '0'，如果不同，请替换为实际的列名
+    time_column = '0'  # 请确认实际列名后，修改为正确的名称
+    if time_column not in time_data.columns:
+        st.error(f"时间数据中没有找到 '{time_column}' 列，请检查数据格式。")
+        return None
+
+    time = time_frame_data[time_column].values[0]
     
     # 计算瞬时速度（假设每帧之间的时间间隔为常数）
     speed = np.sqrt(x**2 + y**2 + z**2) / time if time != 0 else 0
@@ -73,4 +80,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
