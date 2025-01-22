@@ -57,7 +57,7 @@ def calculate_instantaneous_speed(position_data, time_data, frame):
 
 # 主函数
 def main():
-    st.title("瞬时速度计算")
+    st.title("❤️‍🔥🌃（瞬时速度计算）")
 
     # 加载位置数据和时间数据
     position_data = load_position_data()
