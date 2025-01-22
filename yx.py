@@ -8,7 +8,11 @@ def load_position_data(uploaded_file):
         if uploaded_file.name.endswith('.xlsx'):
             data = pd.read_excel(uploaded_file, header=None)
         elif uploaded_file.name.endswith('.txt'):
-            data = pd.read_csv(uploaded_file, header=None, delimiter='\t')
+            # 尝试读取 tab 分隔或空格分隔的文件
+            try:
+                data = pd.read_csv(uploaded_file, header=None, delimiter='\t')
+            except pd.errors.ParserError:
+                data = pd.read_csv(uploaded_file, header=None, delim_whitespace=True)
         else:
             st.error("只支持 .xlsx 或 .txt 文件")
             return None
@@ -21,7 +25,11 @@ def load_time_data(uploaded_file):
         if uploaded_file.name.endswith('.xlsx'):
             data = pd.read_excel(uploaded_file, header=None)
         elif uploaded_file.name.endswith('.txt'):
-            data = pd.read_csv(uploaded_file, header=None, delimiter='\t')
+            # 尝试读取 tab 分隔或空格分隔的文件
+            try:
+                data = pd.read_csv(uploaded_file, header=None, delimiter='\t')
+            except pd.errors.ParserError:
+                data = pd.read_csv(uploaded_file, header=None, delim_whitespace=True)
         else:
             st.error("只支持 .xlsx 或 .txt 文件")
             return None
@@ -100,4 +108,5 @@ def main():
     
 if __name__ == '__main__':
     main()
+
 
