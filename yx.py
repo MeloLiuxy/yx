@@ -3,16 +3,19 @@ import pandas as pd
 import numpy as np
 
 # 上传文件并读取数据
-def load_data(file_path):
+def load_data(uploaded_file):
     # 通过扩展名来判断文件类型，选择不同的读取方法
-    if file_path.endswith('.xlsx'):
-        data = pd.read_excel(file_path, header=None)
-    elif file_path.endswith('.txt'):
-        data = pd.read_csv(file_path, header=None, delimiter='\t')  # 假设 txt 是制表符分隔
-    else:
-        st.error("只支持 .xlsx 或 .txt 文件")
-        return None
-    return data
+    if uploaded_file is not None:
+        # 判断文件类型并进行相应处理
+        if uploaded_file.name.endswith('.xlsx'):
+            data = pd.read_excel(uploaded_file, header=None)
+        elif uploaded_file.name.endswith('.txt'):
+            data = pd.read_csv(uploaded_file, header=None, delimiter='\t')  # 假设 txt 是制表符分隔
+        else:
+            st.error("只支持 .xlsx 或 .txt 文件")
+            return None
+        return data
+    return None
 
 # 计算瞬时速度
 def calculate_instantaneous_speed(data, frame, time_interval):
@@ -49,11 +52,11 @@ def main():
     st.title("💖💖💖🐑🌃 瞬时速度计算器")
 
     # 上传文件
-    file_path = st.file_uploader("上传时间数据文件", type=["xlsx", "txt"])
+    uploaded_file = st.file_uploader("上传时间数据文件", type=["xlsx", "txt"])
     
-    if file_path is not None:
+    if uploaded_file is not None:
         # 读取数据
-        data = load_data(file_path)
+        data = load_data(uploaded_file)
         
         if data is not None:
             st.write("数据预览：")
@@ -74,5 +77,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-
-
