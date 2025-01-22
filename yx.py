@@ -38,12 +38,12 @@ def load_time_data(uploaded_file):
 
 # 计算瞬时速度
 def calculate_instantaneous_speed(position_data, time_data, frame):
-    # 获取位置数据中的 x, y, z 坐标
+    # 将数据强制转换为数值型，错误值会变成 NaN
     x = pd.to_numeric(position_data[0], errors='coerce').values
     y = pd.to_numeric(position_data[1], errors='coerce').values
     z = pd.to_numeric(position_data[2], errors='coerce').values
     
-    # 获取时间数据
+    # 将时间数据转换为数值型
     time = pd.to_numeric(time_data[0], errors='coerce').values
     
     # 处理空值（NaN）
@@ -108,5 +108,4 @@ def main():
     
 if __name__ == '__main__':
     main()
-
 
