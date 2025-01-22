@@ -17,7 +17,7 @@ def load_position_data():
 
 # 上传时间数据并读取
 def load_time_data():
-    uploaded_time_file = st.file_uploader("辛苦您上传您的时间数据文件", type=["xlsx", "csv"])
+    uploaded_time_file = st.file_uploader("辛苦您上传您的时间⏱️数据文件", type=["xlsx", "csv"])
     if uploaded_time_file is not None:
         # 读取 Excel 或 CSV 文件
         time_data = pd.read_excel(uploaded_time_file) if uploaded_time_file.name.endswith('.xlsx') else pd.read_csv(uploaded_time_file)
@@ -26,7 +26,7 @@ def load_time_data():
         time_data.columns = time_data.columns.str.strip()
         
         # 打印列名以检查
-        st.write("辛苦您的眼睛了，看一眼时间数据列名：", time_data.columns)
+        st.write("辛苦您的眼睛了🫡，看一眼时间数据列名：", time_data.columns)
         
         return time_data
     return None
