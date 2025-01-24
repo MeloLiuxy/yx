@@ -55,9 +55,22 @@ def calculate_instantaneous_speed(position_data, time_data, frame):
     
     return speed
 
+# 计算平均速度
+def calculate_average_speed(position_data, time_data, start_frame, end_frame):
+    total_speed = 0
+    count = 0
+
+    for frame in range(start_frame, end_frame + 1):
+        speed = calculate_instantaneous_speed(position_data, time_data, frame)
+        if speed is not None:
+            total_speed += speed
+            count += 1
+    
+    return total_speed / count if count > 0 else None
+
 # 主函数
 def main():
-    st.title("💓🩷🩵🐑🌃（🥋瞬时速度计算）")
+    st.title("💓🩷🩵🐑🌃（🥋速度计算工具）")
 
     # 加载位置数据和时间数据
     position_data = load_position_data()
@@ -70,15 +83,28 @@ def main():
         st.write("👭最后看一眼时间数据预览：")
         st.write(time_data.head())
 
-        # 输入查询的 Frame
+        # 计算单帧瞬时速度
         frame = st.number_input("高抬贵手🤸下请您输入查询的帧（Frame）：", min_value=1, max_value=len(position_data), value=1)
-
         if st.button("👅你真棒！终于计算出了瞬时速度💖~"):
             instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
             if instantaneous_speed is not None:
                 st.write(f"帧 {frame} 的瞬时速度为: {instantaneous_speed:.6f} 米/秒")
             else:
                 st.write("该帧的数据不存在。")
+
+        # 计算帧范围内的平均速度
+        start_frame = st.number_input("请输入起始帧：", min_value=1, max_value=len(position_data), value=1)
+        end_frame = st.number_input("请输入结束帧：", min_value=1, max_value=len(position_data), value=len(position_data))
+
+        if st.button("😃计算选定帧范围的平均速度🧮"):
+            if start_frame <= end_frame:
+                avg_speed = calculate_average_speed(position_data, time_data, start_frame, end_frame)
+                if avg_speed is not None:
+                    st.write(f"帧 {start_frame} 到 {end_frame} 的平均速度为: {avg_speed:.6f} 米/秒")
+                else:
+                    st.write("选定帧范围内的数据不存在。")
+            else:
+                st.error("起始帧必须小于等于结束帧，请重新输入。")
 
 if __name__ == '__main__':
     main()
