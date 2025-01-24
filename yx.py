@@ -81,7 +81,7 @@ def calculate_displacement(position_data, start_frame, end_frame):
 
 # 主函数
 def main():
-    st.title("💓🩷🩵🐑🌃（🥋速度与位移计算工具）")
+    st.title("💓🐑🌃（🥋速度与位移计算工具）")
 
     # 加载位置数据和时间数据
     position_data = load_position_data()
