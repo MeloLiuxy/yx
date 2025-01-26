@@ -87,6 +87,10 @@ def calculate_displacement(position_data, start_frame, end_frame):
     
     return displacement
 
+# 计算关节转动惯量（通过物体质量和旋转轴长度）
+def calculate_inertia(mass, radius):
+    return mass * radius**2
+
 # 主函数
 def main():
     st.title("💓🐑🌃（🥋速度与位移计算工具）")
@@ -102,7 +106,8 @@ def main():
         st.write("👭最后看一眼时间数据预览：")
         st.write(time_data.head())
 
-        # 计算单帧瞬时速度
+        # 计算瞬时速度
+        st.header("🔎 计算瞬时速度")
         frame = st.number_input("高抬贵手🤸下请您输入查询的帧（Frame）：", min_value=1, max_value=len(position_data), value=1)
         if st.button("👅你真棒！终于计算出了瞬时速度💖~"):
             instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
@@ -112,6 +117,7 @@ def main():
                 st.write("该帧的数据不存在。")
 
         # 计算帧范围内的平均速度和位移
+        st.header("📈 计算平均速度与位移")
         start_frame = st.number_input("请输入起始帧：", min_value=1, max_value=len(position_data), value=1)
         end_frame = st.number_input("请输入结束帧：", min_value=1, max_value=len(position_data), value=len(position_data))
 
@@ -128,23 +134,8 @@ def main():
             else:
                 st.error("起始帧必须小于等于结束帧，请重新输入。")
 
-   # 计算关节角加速度
-def calculate_joint_angular_acceleration(torque, inertia):
-    if inertia != 0:
-        return torque / inertia
-    else:
-        return None
-
-# 计算关节角速度
-def calculate_joint_angular_velocity(angular_acceleration, initial_angular_velocity=0, delta_time=1):
-    return initial_angular_velocity + angular_acceleration * delta_time
-
-# 计算关节转动惯量（通过物体质量和旋转轴长度）
-def calculate_inertia(mass, radius):
-    return mass * radius**2
-
-# 主函数
-def main():
+# 关节角加速度与角速度计算
+def angular_calculation():
     st.title("💓关节角加速度与角速度计算")
 
     # 输入关节力矩、线速度、物体质量等信息
@@ -173,5 +164,10 @@ def main():
             st.write("无法计算角加速度，可能是转动惯量为零。")
 
 if __name__ == '__main__':
-    main()
+    choice = st.selectbox("选择功能", ["速度与位移计算", "关节角加速度与角速度计算"])
+    if choice == "速度与位移计算":
+        main()
+    elif choice == "关节角加速度与角速度计算":
+        angular_calculation()
+
 
