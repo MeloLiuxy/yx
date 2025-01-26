@@ -16,18 +16,23 @@ def calculate_combined_angle(x, y, z):
     # 计算合角度 (示例: 使用 atan2 和 sqrt 计算)
     return np.degrees(np.arctan2(np.sqrt(x**2 + y**2), z))
 
-# 计算最大和最小角度
-def calculate_max_min_angle(angle_data):
+# 计算某个帧范围内的最大最小角度
+def calculate_max_min_angle_in_range(angle_data, start_frame, end_frame):
     angles = []
+
+    # 获取指定帧范围内的角度数据
     for index, row in angle_data.iterrows():
-        x, y, z = row['X'], row['Y'], row['Z']
-        angle = calculate_combined_angle(x, y, z)
-        angles.append(angle)
+        if start_frame <= row['Frame'] <= end_frame:
+            x, y, z = row['X'], row['Y'], row['Z']
+            angle = calculate_combined_angle(x, y, z)
+            angles.append(angle)
     
-    max_angle = max(angles)
-    min_angle = min(angles)
-    
-    return max_angle, min_angle, angles
+    if angles:
+        max_angle = max(angles)
+        min_angle = min(angles)
+        return max_angle, min_angle
+    else:
+        return None, None
 
 # 计算某个帧的角度
 def get_angle_for_frame(angle_data, frame):
@@ -48,10 +53,20 @@ def main():
         st.write("📉看一眼您的角度数据预览：")
         st.write(angle_data.head())
 
-        # 计算角度的最大最小值
-        max_angle, min_angle, angles = calculate_max_min_angle(angle_data)
-        st.write(f"最大角度: {max_angle:.2f}°")
-        st.write(f"最小角度: {min_angle:.2f}°")
+        # 输入帧范围并计算角度的最大最小值
+        start_frame = st.number_input("请输入起始帧：", min_value=1, max_value=len(angle_data), value=1)
+        end_frame = st.number_input("请输入结束帧：", min_value=1, max_value=len(angle_data), value=len(angle_data))
+
+        if st.button("🧑‍🏫计算选定帧范围的最大最小角度"):
+            if start_frame <= end_frame:
+                max_angle, min_angle = calculate_max_min_angle_in_range(angle_data, start_frame, end_frame)
+                if max_angle is not None and min_angle is not None:
+                    st.write(f"帧 {start_frame} 到 {end_frame} 范围内的最大角度为: {max_angle:.2f}°")
+                    st.write(f"帧 {start_frame} 到 {end_frame} 范围内的最小角度为: {min_angle:.2f}°")
+                else:
+                    st.write("该帧范围内没有角度数据。")
+            else:
+                st.error("起始帧必须小于等于结束帧，请重新输入。")
 
         # 输入帧并计算角度
         frame = st.number_input("请输入查询的帧（Frame）以查看角度：", min_value=1, max_value=len(angle_data), value=1)
