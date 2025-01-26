@@ -148,11 +148,12 @@ def calculate_angular_speed_and_acceleration():
         angular_acceleration, angular_velocity = calculate_angular_acceleration_and_velocity(
             torque, mass, radius, angle, linear_velocity, delta_time
         )
+
         if angular_acceleration is not None and angular_velocity is not None:
             st.write(f"角加速度为: {angular_acceleration:.6f} rad/s²")
             st.write(f"角速度为: {angular_velocity:.6f} rad/s")
         else:
-            st.write("无法计算角加速度或角速度。")
+            st.write("无法计算角加速度或角速度。请检查输入数据。")
 
 # 主函数
 def main():
