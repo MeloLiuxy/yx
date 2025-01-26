@@ -128,17 +128,37 @@ def main():
             else:
                 st.error("起始帧必须小于等于结束帧，请重新输入。")
 
-    # 独立的关节角加速度与角速度计算功能
+   # 计算关节角加速度
+def calculate_joint_angular_acceleration(torque, inertia):
+    if inertia != 0:
+        return torque / inertia
+    else:
+        return None
+
+# 计算关节角速度
+def calculate_joint_angular_velocity(angular_acceleration, initial_angular_velocity=0, delta_time=1):
+    return initial_angular_velocity + angular_acceleration * delta_time
+
+# 计算关节转动惯量（通过物体质量和旋转轴长度）
+def calculate_inertia(mass, radius):
+    return mass * radius**2
+
+# 主函数
+def main():
     st.title("💓关节角加速度与角速度计算")
 
+    # 输入关节力矩、线速度、物体质量等信息
     torque = st.number_input("请输入关节力矩 (N·m)：", value=0.0)
     linear_velocity = st.number_input("请输入关节线速度 (m/s)：", value=0.0)
+    mass = st.number_input("请输入物体质量 (kg)：", value=1.0)
+    radius = st.number_input("请输入旋转轴的长度 (m)：", value=1.0)
     angular_velocity_initial = st.number_input("请输入初始关节角速度 (rad/s)：", value=0.0)
     delta_time = st.number_input("请输入时间间隔 (秒)：", value=1.0)
 
     if st.button("计算关节角加速度与角速度"):
-        # 假设一个常见的关节转动惯量 (可以替换为实际数据)
-        inertia = 1.0  # 你可以根据需要设置默认值或从其他地方输入
+        # 计算关节转动惯量
+        inertia = calculate_inertia(mass, radius)
+        st.write(f"关节转动惯量为: {inertia:.6f} kg·m²")
         
         # 计算角加速度
         angular_acceleration = calculate_joint_angular_acceleration(torque, inertia)
