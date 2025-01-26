@@ -132,12 +132,14 @@ def main():
     st.title("💓关节角加速度与角速度计算")
 
     torque = st.number_input("请输入关节力矩 (N·m)：", value=0.0)
-    inertia = st.number_input("请输入关节转动惯量 (kg·m²)：", value=1.0)
+    linear_velocity = st.number_input("请输入关节线速度 (m/s)：", value=0.0)
     angular_velocity_initial = st.number_input("请输入初始关节角速度 (rad/s)：", value=0.0)
     delta_time = st.number_input("请输入时间间隔 (秒)：", value=1.0)
-    linear_velocity = st.number_input("请输入关节线速度 (m/s)：", value=0.0)
 
-    if st.button("计算关节角加速度、角速度和旋转轴长度"):
+    if st.button("计算关节角加速度与角速度"):
+        # 假设一个常见的关节转动惯量 (可以替换为实际数据)
+        inertia = 1.0  # 你可以根据需要设置默认值或从其他地方输入
+        
         # 计算角加速度
         angular_acceleration = calculate_joint_angular_acceleration(torque, inertia)
         if angular_acceleration is not None:
@@ -147,14 +149,9 @@ def main():
             angular_velocity = calculate_joint_angular_velocity(angular_acceleration, angular_velocity_initial, delta_time)
             st.write(f"关节的角速度为: {angular_velocity:.6f} rad/s")
             
-            # 计算旋转轴长度
-            axis_length = calculate_axis_length(linear_velocity, angular_velocity)
-            if axis_length is not None:
-                st.write(f"旋转轴长度为: {axis_length:.6f} 米")
-            else:
-                st.write("无法计算旋转轴长度，可能是角速度为零。")
         else:
             st.write("无法计算角加速度，可能是转动惯量为零。")
 
 if __name__ == '__main__':
     main()
+
