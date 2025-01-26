@@ -91,6 +91,19 @@ def calculate_displacement(position_data, start_frame, end_frame):
 def calculate_inertia(mass, radius):
     return mass * radius**2
 
+# 倒推计算角加速度
+def calculate_angular_acceleration_from_angle(torque, radius, linear_velocity, angle):
+    # 先根据力矩和半径计算角加速度
+    inertia = calculate_inertia(mass=1, radius=radius)  # 假设质量为1kg
+    angular_acceleration = calculate_joint_angular_acceleration(torque, inertia)
+    
+    # 如果已经有了角加速度，可以倒推角速度
+    if angular_acceleration is not None:
+        angular_velocity = angle * angular_acceleration  # 角度与角加速度的关系
+        return angular_acceleration, angular_velocity
+    else:
+        return None, None
+
 # 主函数
 def main():
     st.title("💓🐑🌃（🥋速度与位移计算工具）")
@@ -125,6 +138,32 @@ def main():
             if start_frame <= end_frame:
                 avg_speed = calculate_average_speed(position_data, time_data, start_frame, end_frame)
                 displacement = calculate_displacement(position_data, start_frame, end_frame)
+                if avg_speed is not None and displacement is not None:
+                    st.write(f"帧 {start_frame} 到 {end_frame} 的平均速度为: {avg_speed:.6f} 米/秒")
+                    st.write(f"帧 {start_frame} 到 {end_frame} 的位移为: {displacement:.6f} 米")
+                else:
+                    st.write("选定帧范围内的数据不存在。")
+            else:
+                st.error("起始帧必须小于等于结束帧，请重新输入。")
+
+        # 计算倒推的角加速度与角速度
+        st.header("🌀 计算倒推的角加速度与角速度")
+        torque = st.number_input("请输入关节力矩 (N·m)：", value=0.0)
+        linear_velocity = st.number_input("请输入关节线速度 (m/s)：", value=0.0)
+        radius = st.number_input("请输入旋转轴的长度 (m)：", value=1.0)
+        angle = st.number_input("请输入关节角度 (rad)：", value=0.0)
+
+        if st.button("计算倒推的角加速度与角速度"):
+            angular_acceleration, angular_velocity = calculate_angular_acceleration_from_angle(torque, radius, linear_velocity, angle)
+            if angular_acceleration is not None and angular_velocity is not None:
+                st.write(f"角加速度为: {angular_acceleration:.6f} rad/s²")
+                st.write(f"角速度为: {angular_velocity:.6f} rad/s")
+            else:
+                st.write("无法计算角加速度或角速度。")
+
+if __name__ == '__main__':
+    main()
+
 
                 if avg_speed is not None and displacement is not None:
                     st.write(f"帧 {start_frame} 到 {end_frame} 的平均速度为: {avg_speed:.6f} 米/秒")
