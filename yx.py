@@ -1,4 +1,4 @@
-import streamlit as st
+这段代码改为将两个功能相互独立出来，可以选择用哪个功能的形式import streamlit as st
 import pandas as pd
 import numpy as np
 
@@ -23,7 +23,10 @@ def load_time_data():
 
 # 计算关节角加速度
 def calculate_joint_angular_acceleration(torque, inertia):
-    return torque / inertia if inertia != 0 else None
+    if inertia != 0:
+        return torque / inertia
+    else:
+        return None
 
 # 计算关节角速度
 def calculate_joint_angular_velocity(angular_acceleration, initial_angular_velocity=0, delta_time=1):
@@ -37,6 +40,7 @@ def calculate_inertia(mass, radius):
 def calculate_angular_acceleration_and_velocity(torque, mass, radius, angle, linear_velocity, delta_time):
     inertia = calculate_inertia(mass, radius)  # 计算转动惯量
     angular_acceleration = calculate_joint_angular_acceleration(torque, inertia)  # 计算角加速度
+    
     if angular_acceleration is not None:
         angular_velocity = calculate_joint_angular_velocity(angular_acceleration, angle, delta_time)  # 根据角加速度计算角速度
         return angular_acceleration, angular_velocity
@@ -87,33 +91,15 @@ def main():
 
         # 计算倒推的角加速度与角速度
         st.header("🌀 计算倒推的角加速度与角速度")
-        
-        # 输入 x, y, z 轴的数据
-        torque_x = st.number_input("请输入关节力矩 (x轴 N·m)：", value=0.0)
-        torque_y = st.number_input("请输入关节力矩 (y轴 N·m)：", value=0.0)
-        torque_z = st.number_input("请输入关节力矩 (z轴 N·m)：", value=0.0)
-
-        linear_velocity_x = st.number_input("请输入关节线速度 (x轴 m/s)：", value=0.0)
-        linear_velocity_y = st.number_input("请输入关节线速度 (y轴 m/s)：", value=0.0)
-        linear_velocity_z = st.number_input("请输入关节线速度 (z轴 m/s)：", value=0.0)
-
+        torque = st.number_input("请输入关节力矩 (N·m)：", value=0.0)
+        linear_velocity = st.number_input("请输入关节线速度 (m/s)：", value=0.0)
         mass = st.number_input("请输入物体质量 (kg)：", value=1.0)
-        angle_x = st.number_input("请输入关节角度 (x轴 rad)：", value=0.0)
-        angle_y = st.number_input("请输入关节角度 (y轴 rad)：", value=0.0)
-        angle_z = st.number_input("请输入关节角度 (z轴 rad)：", value=0.0)
-
+        angle = st.number_input("请输入关节角度 (rad)：", value=0.0)
         delta_time = st.number_input("请输入时间间隔 (秒)：", value=1.0)
 
         if st.button("计算倒推的角加速度与角速度"):
-            # 将输入的x, y, z轴合并为向量
-            torque = np.array([torque_x, torque_y, torque_z])
-            linear_velocity = np.array([linear_velocity_x, linear_velocity_y, linear_velocity_z])
-            angle = np.array([angle_x, angle_y, angle_z])
-
-            # 假设转动惯量半径为1
-            radius = 1.0
             angular_acceleration, angular_velocity = calculate_angular_acceleration_and_velocity(
-                torque, mass, radius, angle, linear_velocity, delta_time
+                torque, mass, radius=1.0, angle=angle, linear_velocity=linear_velocity, delta_time=delta_time
             )
             if angular_acceleration is not None and angular_velocity is not None:
                 st.write(f"角加速度为: {angular_acceleration:.6f} rad/s²")
