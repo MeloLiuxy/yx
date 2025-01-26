@@ -32,74 +32,17 @@ def calculate_joint_angular_acceleration(torque, inertia):
 def calculate_joint_angular_velocity(angular_acceleration, initial_angular_velocity=0, delta_time=1):
     return initial_angular_velocity + angular_acceleration * delta_time
 
-# 计算旋转轴长度
-def calculate_axis_length(linear_velocity, angular_velocity):
-    if angular_velocity != 0:
-        return linear_velocity / angular_velocity
-    else:
-        return None
-
-# 计算瞬时速度
-def calculate_instantaneous_speed(position_data, time_data, frame):
-    position_frame_data = position_data[position_data['Frame'] == frame]
-    time_frame_data = time_data[time_data['Frame'] == frame]
-
-    if position_frame_data.empty or time_frame_data.empty:
-        return None  
-
-    x, y, z = position_frame_data['X'].values[0], position_frame_data['Y'].values[0], position_frame_data['Z'].values[0]
-
-    if 'time' not in time_data.columns:
-        st.error("时间数据中没有找到 'time' 列，请检查数据格式。")
-        return None
-
-    time = time_frame_data['time'].values[0]
-
-    speed = np.sqrt(x**2 + y**2 + z**2) / time if time != 0 else 0
-    
-    return speed
-
-# 计算帧范围内的平均速度
-def calculate_average_speed(position_data, time_data, start_frame, end_frame):
-    total_speed = 0
-    count = 0
-
-    for frame in range(start_frame, end_frame + 1):
-        speed = calculate_instantaneous_speed(position_data, time_data, frame)
-        if speed is not None:
-            total_speed += speed
-            count += 1
-    
-    return total_speed / count if count > 0 else None
-
-# 计算帧范围内的位移
-def calculate_displacement(position_data, start_frame, end_frame):
-    start_pos = position_data[position_data['Frame'] == start_frame]
-    end_pos = position_data[position_data['Frame'] == end_frame]
-
-    if start_pos.empty or end_pos.empty:
-        return None  
-
-    x1, y1, z1 = start_pos['X'].values[0], start_pos['Y'].values[0], start_pos['Z'].values[0]
-    x2, y2, z2 = end_pos['X'].values[0], end_pos['Y'].values[0], end_pos['Z'].values[0]
-
-    displacement = np.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)
-    
-    return displacement
-
-# 计算关节转动惯量（通过物体质量和旋转轴长度）
+# 计算关节转动惯量（通过物体质量和半径）
 def calculate_inertia(mass, radius):
     return mass * radius**2
 
-# 倒推计算角加速度
-def calculate_angular_acceleration_from_angle(torque, radius, linear_velocity, angle):
-    # 先根据力矩和半径计算角加速度
-    inertia = calculate_inertia(mass=1, radius=radius)  # 假设质量为1kg
-    angular_acceleration = calculate_joint_angular_acceleration(torque, inertia)
+# 倒推计算角加速度与角速度
+def calculate_angular_acceleration_and_velocity(torque, mass, radius, angle, linear_velocity, delta_time):
+    inertia = calculate_inertia(mass, radius)  # 计算转动惯量
+    angular_acceleration = calculate_joint_angular_acceleration(torque, inertia)  # 计算角加速度
     
-    # 如果已经有了角加速度，可以倒推角速度
     if angular_acceleration is not None:
-        angular_velocity = angle * angular_acceleration  # 角度与角加速度的关系
+        angular_velocity = calculate_joint_angular_velocity(angular_acceleration, angle, delta_time)  # 根据角加速度计算角速度
         return angular_acceleration, angular_velocity
     else:
         return None, None
@@ -150,11 +93,14 @@ def main():
         st.header("🌀 计算倒推的角加速度与角速度")
         torque = st.number_input("请输入关节力矩 (N·m)：", value=0.0)
         linear_velocity = st.number_input("请输入关节线速度 (m/s)：", value=0.0)
-        radius = st.number_input("请输入旋转轴的长度 (m)：", value=1.0)
+        mass = st.number_input("请输入物体质量 (kg)：", value=1.0)
         angle = st.number_input("请输入关节角度 (rad)：", value=0.0)
+        delta_time = st.number_input("请输入时间间隔 (秒)：", value=1.0)
 
         if st.button("计算倒推的角加速度与角速度"):
-            angular_acceleration, angular_velocity = calculate_angular_acceleration_from_angle(torque, radius, linear_velocity, angle)
+            angular_acceleration, angular_velocity = calculate_angular_acceleration_and_velocity(
+                torque, mass, radius=1.0, angle=angle, linear_velocity=linear_velocity, delta_time=delta_time
+            )
             if angular_acceleration is not None and angular_velocity is not None:
                 st.write(f"角加速度为: {angular_acceleration:.6f} rad/s²")
                 st.write(f"角速度为: {angular_velocity:.6f} rad/s")
@@ -163,4 +109,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
