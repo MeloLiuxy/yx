@@ -152,8 +152,10 @@ def main_joint_kinematics():
             st.write("无法计算转动惯量，可能是因为角加速度为零。")
 
 if __name__ == '__main__':
-    mode = st.radio("请选择功能模块", ("关节角速度与加速度计算"))
+    mode = st.radio("请选择功能模块", ("关节角速度与加速度计算", "其他模块"))
 
     if mode == "关节角速度与加速度计算":
         main_joint_kinematics()
+    elif mode == "其他模块":
+        st.write("您选择了其他模块。") 
 
