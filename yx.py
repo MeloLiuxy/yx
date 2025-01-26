@@ -110,27 +110,27 @@ def calculate_angular_acceleration_and_velocity(torque_x, torque_y, torque_z, ma
 def main_joint_kinematics():
     st.title("💪关节角速度与加速度计算工具")
 
-    # 手动输入数据
-    torque_x = st.number_input("请输入关节力矩 x (N·m)：", value=0.0)
-    torque_y = st.number_input("请输入关节力矩 y (N·m)：", value=0.0)
-    torque_z = st.number_input("请输入关节力矩 z (N·m)：", value=0.0)
+    # 手动输入数据，每个数据格式化为小数点后六位
+    torque_x = st.number_input("请输入关节力矩 x (N·m)：", value=0.0, format="%.6f")
+    torque_y = st.number_input("请输入关节力矩 y (N·m)：", value=0.0, format="%.6f")
+    torque_z = st.number_input("请输入关节力矩 z (N·m)：", value=0.0, format="%.6f")
 
-    linear_velocity_x = st.number_input("请输入关节线速度 x (m/s)：", value=0.0)
-    linear_velocity_y = st.number_input("请输入关节线速度 y (m/s)：", value=0.0)
-    linear_velocity_z = st.number_input("请输入关节线速度 z (m/s)：", value=0.0)
+    linear_velocity_x = st.number_input("请输入关节线速度 x (m/s)：", value=0.0, format="%.6f")
+    linear_velocity_y = st.number_input("请输入关节线速度 y (m/s)：", value=0.0, format="%.6f")
+    linear_velocity_z = st.number_input("请输入关节线速度 z (m/s)：", value=0.0, format="%.6f")
 
-    mass = st.number_input("请输入物体质量 (kg)：", value=1.0)  # 输入统一质量值
+    mass = st.number_input("请输入物体质量 (kg)：", value=1.0, format="%.6f")  # 输入统一质量值
 
-    angle_x = st.number_input("请输入关节角度 x (rad)：", value=0.0)
-    angle_y = st.number_input("请输入关节角度 y (rad)：", value=0.0)
-    angle_z = st.number_input("请输入关节角度 z (rad)：", value=0.0)
+    angle_x = st.number_input("请输入关节角度 x (rad)：", value=0.0, format="%.6f")
+    angle_y = st.number_input("请输入关节角度 y (rad)：", value=0.0, format="%.6f")
+    angle_z = st.number_input("请输入关节角度 z (rad)：", value=0.0, format="%.6f")
 
-    delta_time = st.number_input("请输入时间间隔 (秒)：", value=1.0)
+    delta_time = st.number_input("请输入时间间隔 (秒)：", value=1.0, format="%.6f")
 
     # 输入关节加速度，分别为x、y、z方向
-    joint_acceleration_x = st.number_input("请输入关节加速度 x (rad/s²)：", value=0.0)
-    joint_acceleration_y = st.number_input("请输入关节加速度 y (rad/s²)：", value=0.0)
-    joint_acceleration_z = st.number_input("请输入关节加速度 z (rad/s²)：", value=0.0)
+    joint_acceleration_x = st.number_input("请输入关节加速度 x (rad/s²)：", value=0.0, format="%.6f")
+    joint_acceleration_y = st.number_input("请输入关节加速度 y (rad/s²)：", value=0.0, format="%.6f")
+    joint_acceleration_z = st.number_input("请输入关节加速度 z (rad/s²)：", value=0.0, format="%.6f")
 
     if st.button("计算关节合成角速度与角加速度"):
         # 调用计算函数
