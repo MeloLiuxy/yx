@@ -2,25 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# 上传位置数据并读取
-def load_position_data():
-    uploaded_position_file = st.file_uploader("请美女😋宵上传您的位置数据文件", type=["xlsx", "csv"])
-    if uploaded_position_file is not None:
-        position_data = pd.read_excel(uploaded_position_file) if uploaded_position_file.name.endswith('.xlsx') else pd.read_csv(uploaded_position_file)
-        position_data.columns = position_data.columns.str.strip()
-        return position_data
-    return None
-
-# 上传时间数据并读取
-def load_time_data():
-    uploaded_time_file = st.file_uploader("😻辛苦您上传您的时间⏱️数据文件", type=["xlsx", "csv"])
-    if uploaded_time_file is not None:
-        time_data = pd.read_excel(uploaded_time_file) if uploaded_time_file.name.endswith('.xlsx') else pd.read_csv(uploaded_time_file)
-        time_data.columns = time_data.columns.str.strip()
-        st.write("辛苦您的眼睛了🫡，看一眼时间数据列名：", time_data.columns)
-        return time_data
-    return None
-
 # 计算瞬时速度
 def calculate_instantaneous_speed(position_data, time_data, frame):
     position_frame_data = position_data[position_data['Frame'] == frame]
@@ -91,31 +72,29 @@ def calculate_joint_angular_acceleration(angular_velocities, time_data):
 def main_position_speed():
     st.title("💓🐑🌃（🥋速度与位移计算工具）")
 
-    # 加载位置数据和时间数据
-    position_data = load_position_data()
-    time_data = load_time_data()
+    # 用户输入位置和时间数据
+    st.write("请输入位置数据（每行一个帧的X、Y、Z坐标，以逗号分隔）：")
+    position_data_input = st.text_area("位置数据", value="0, 0, 0\n1, 1, 1\n2, 2, 2\n3, 3, 3")
+    position_data = np.array([list(map(float, line.split(','))) for line in position_data_input.split('\n')])
 
-    if position_data is not None and time_data is not None:
-        st.write("🐯再辛苦您一下，看一眼🙈位置数据预览：")
-        st.write(position_data.head())
+    st.write("请输入时间数据（每行一个时间点，以逗号分隔）：")
+    time_data_input = st.text_area("时间数据", value="0, 1, 2, 3")
+    time_data = np.array(list(map(float, time_data_input.split(','))))
 
-        st.write("👭最后看一眼时间数据预览：")
-        st.write(time_data.head())
-
-        # 计算单帧瞬时速度
-        frame = st.number_input("高抬贵手🤸下请您输入查询的帧（Frame）：", min_value=1, max_value=len(position_data), value=1)
-        if st.button("👅你真棒！终于计算出了瞬时速度💖~"):
-            instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
-            if instantaneous_speed is not None:
-                st.write(f"帧 {frame} 的瞬时速度为: {instantaneous_speed:.6f} 米/秒")
-            else:
-                st.write("该帧的数据不存在。")
+    # 计算单帧瞬时速度
+    frame = st.number_input("请输入查询的帧：", min_value=1, max_value=len(position_data), value=1)
+    if st.button("计算瞬时速度"):
+        instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
+        if instantaneous_speed is not None:
+            st.write(f"帧 {frame} 的瞬时速度为: {instantaneous_speed:.6f} 米/秒")
+        else:
+            st.write("该帧的数据不存在。")
 
         # 计算帧范围内的平均速度和位移
         start_frame = st.number_input("请输入起始帧：", min_value=1, max_value=len(position_data), value=1)
         end_frame = st.number_input("请输入结束帧：", min_value=1, max_value=len(position_data), value=len(position_data))
 
-        if st.button("😃计算选定帧范围的平均速度与位移🧮"):
+        if st.button("计算选定帧范围的平均速度与位移"):
             if start_frame <= end_frame:
                 avg_speed = calculate_average_speed(position_data, time_data, start_frame, end_frame)
                 displacement = calculate_displacement(position_data, start_frame, end_frame)
@@ -132,21 +111,20 @@ def main_position_speed():
 def main_joint_kinematics():
     st.title("💪关节角速度与加速度计算工具")
 
-    # 上传时间数据
-    time_data = load_time_data()
-    
-    if time_data is not None:
-        # 关节角度输入
-        joint_angles = st.text_area("请输入关节角度数据（以逗号分隔）：", value="0, 10, 20, 30")
-        joint_angles = np.array([float(angle) for angle in joint_angles.split(',')])
+    # 用户输入关节角度和时间数据
+    joint_angles_input = st.text_area("请输入关节角度数据（以逗号分隔）：", value="0, 10, 20, 30")
+    joint_angles = np.array([float(angle) for angle in joint_angles_input.split(',')])
 
-        # 计算关节角速度和角加速度
-        if len(joint_angles) > 1:
-            angular_velocities = calculate_joint_angular_velocity(joint_angles, time_data['time'])
-            angular_accelerations = calculate_joint_angular_acceleration(angular_velocities, time_data['time'])
+    time_data_input = st.text_area("请输入时间数据（以逗号分隔）：", value="0, 1, 2, 3")
+    time_data = np.array([float(time) for time in time_data_input.split(',')])
 
-            st.write("计算出的关节角速度：", angular_velocities)
-            st.write("计算出的关节角加速度：", angular_accelerations)
+    # 计算关节角速度和角加速度
+    if len(joint_angles) > 1 and len(time_data) > 1:
+        angular_velocities = calculate_joint_angular_velocity(joint_angles, time_data)
+        angular_accelerations = calculate_joint_angular_acceleration(angular_velocities, time_data)
+
+        st.write("计算出的关节角速度：", angular_velocities)
+        st.write("计算出的关节角加速度：", angular_accelerations)
 
 if __name__ == '__main__':
     mode = st.radio("请选择功能模块", ("速度与位移计算", "关节角速度与加速度计算"))
@@ -155,4 +133,5 @@ if __name__ == '__main__':
         main_position_speed()
     else:
         main_joint_kinematics()
+
 
