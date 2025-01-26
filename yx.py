@@ -79,31 +79,33 @@ def calculate_joint_angular_acceleration(torque, inertia):
     else:
         return None
 
-# 计算转动惯量（通过物体质量和半径）
-def calculate_inertia(mass, radius):
-    return mass * radius**2
+# 计算转动惯量（倒推计算）
+def calculate_inertia_from_torque_and_acceleration(torque, angular_acceleration):
+    if angular_acceleration != 0:
+        return torque / angular_acceleration
+    else:
+        return None
 
 # 倒推计算角加速度与角速度
-def calculate_angular_acceleration_and_velocity(torque_x, torque_y, torque_z, mass_x, mass_y, mass_z, radius, angle_x, angle_y, angle_z, linear_velocity_x, linear_velocity_y, linear_velocity_z, delta_time):
-    # 计算每个方向的转动惯量
-    inertia_x = calculate_inertia(mass_x, radius)
-    inertia_y = calculate_inertia(mass_y, radius)
-    inertia_z = calculate_inertia(mass_z, radius)
+def calculate_angular_acceleration_and_velocity(torque_x, torque_y, torque_z, mass, angle_x, angle_y, angle_z, linear_velocity_x, linear_velocity_y, linear_velocity_z, delta_time, joint_acceleration_x, joint_acceleration_y, joint_acceleration_z):
+    # 使用输入的关节加速度倒推计算转动惯量
+    inertia_x = calculate_inertia_from_torque_and_acceleration(torque_x, joint_acceleration_x)
+    inertia_y = calculate_inertia_from_torque_and_acceleration(torque_y, joint_acceleration_y)
+    inertia_z = calculate_inertia_from_torque_and_acceleration(torque_z, joint_acceleration_z)
 
-    # 计算每个方向的角加速度
-    angular_acceleration_x = calculate_joint_angular_acceleration(torque_x, inertia_x)
-    angular_acceleration_y = calculate_joint_angular_acceleration(torque_y, inertia_y)
-    angular_acceleration_z = calculate_joint_angular_acceleration(torque_z, inertia_z)
-
-    if angular_acceleration_x is not None and angular_acceleration_y is not None and angular_acceleration_z is not None:
-        # 计算每个方向的角速度
-        angular_velocity_x = calculate_joint_angular_velocity(angular_acceleration_x, angle_x, delta_time)
-        angular_velocity_y = calculate_joint_angular_velocity(angular_acceleration_y, angle_y, delta_time)
-        angular_velocity_z = calculate_joint_angular_velocity(angular_acceleration_z, angle_z, delta_time)
-
-        return angular_acceleration_x, angular_acceleration_y, angular_acceleration_z, angular_velocity_x, angular_velocity_y, angular_velocity_z
-    else:
+    if None in [inertia_x, inertia_y, inertia_z]:
         return None, None, None, None, None, None
+
+    # 计算每个方向的角速度
+    angular_velocity_x = calculate_joint_angular_velocity(joint_acceleration_x, angle_x, delta_time)
+    angular_velocity_y = calculate_joint_angular_velocity(joint_acceleration_y, angle_y, delta_time)
+    angular_velocity_z = calculate_joint_angular_velocity(joint_acceleration_z, angle_z, delta_time)
+
+    # 合成角加速度和角速度
+    total_angular_acceleration = np.sqrt(joint_acceleration_x**2 + joint_acceleration_y**2 + joint_acceleration_z**2)
+    total_angular_velocity = np.sqrt(angular_velocity_x**2 + angular_velocity_y**2 + angular_velocity_z**2)
+
+    return total_angular_acceleration, total_angular_velocity, inertia_x, inertia_y, inertia_z
 
 # 主函数 - 关节角度、角速度和角加速度计算
 def main_joint_kinematics():
@@ -118,9 +120,7 @@ def main_joint_kinematics():
     linear_velocity_y = st.number_input("请输入关节线速度 y (m/s)：", value=0.0)
     linear_velocity_z = st.number_input("请输入关节线速度 z (m/s)：", value=0.0)
 
-    mass_x = st.number_input("请输入物体质量 x (kg)：", value=1.0)
-    mass_y = st.number_input("请输入物体质量 y (kg)：", value=1.0)
-    mass_z = st.number_input("请输入物体质量 z (kg)：", value=1.0)
+    mass = st.number_input("请输入物体质量 (kg)：", value=1.0)  # 输入统一质量值
 
     angle_x = st.number_input("请输入关节角度 x (rad)：", value=0.0)
     angle_y = st.number_input("请输入关节角度 y (rad)：", value=0.0)
@@ -128,30 +128,28 @@ def main_joint_kinematics():
 
     delta_time = st.number_input("请输入时间间隔 (秒)：", value=1.0)
 
-    if st.button("计算关节角速度与角加速度"):
+    # 输入关节加速度，分别为x、y、z方向
+    joint_acceleration_x = st.number_input("请输入关节加速度 x (rad/s²)：", value=0.0)
+    joint_acceleration_y = st.number_input("请输入关节加速度 y (rad/s²)：", value=0.0)
+    joint_acceleration_z = st.number_input("请输入关节加速度 z (rad/s²)：", value=0.0)
+
+    if st.button("计算关节合成角速度与角加速度"):
         # 调用计算函数
-        angular_acceleration_x, angular_acceleration_y, angular_acceleration_z, angular_velocity_x, angular_velocity_y, angular_velocity_z = calculate_angular_acceleration_and_velocity(
-            torque_x, torque_y, torque_z, mass_x, mass_y, mass_z, radius=1.0, angle_x=angle_x, angle_y=angle_y, angle_z=angle_z,
-            linear_velocity_x=linear_velocity_x, linear_velocity_y=linear_velocity_y, linear_velocity_z=linear_velocity_z, delta_time=delta_time
+        total_angular_acceleration, total_angular_velocity, inertia_x, inertia_y, inertia_z = calculate_angular_acceleration_and_velocity(
+            torque_x, torque_y, torque_z, mass, angle_x, angle_y, angle_z,
+            linear_velocity_x=linear_velocity_x, linear_velocity_y=linear_velocity_y, linear_velocity_z=linear_velocity_z,
+            delta_time=delta_time, joint_acceleration_x=joint_acceleration_x, joint_acceleration_y=joint_acceleration_y, joint_acceleration_z=joint_acceleration_z
         )
 
-        if angular_acceleration_x is not None:
-            st.write(f"关节 x 方向的角加速度为: {angular_acceleration_x:.6f} rad/s²")
-            st.write(f"关节 x 方向的角速度为: {angular_velocity_x:.6f} rad/s")
+        if total_angular_acceleration is not None:
+            # 输出计算的结果
+            st.write(f"关节合成角加速度为: {total_angular_acceleration:.6f} rad/s²")
+            st.write(f"关节合成角速度为: {total_angular_velocity:.6f} rad/s")
+            st.write(f"关节 x 方向的转动惯量为: {inertia_x:.6f} kg·m²")
+            st.write(f"关节 y 方向的转动惯量为: {inertia_y:.6f} kg·m²")
+            st.write(f"关节 z 方向的转动惯量为: {inertia_z:.6f} kg·m²")
         else:
-            st.write("无法计算关节 x 方向的角加速度或角速度。")
-
-        if angular_acceleration_y is not None:
-            st.write(f"关节 y 方向的角加速度为: {angular_acceleration_y:.6f} rad/s²")
-            st.write(f"关节 y 方向的角速度为: {angular_velocity_y:.6f} rad/s")
-        else:
-            st.write("无法计算关节 y 方向的角加速度或角速度。")
-
-        if angular_acceleration_z is not None:
-            st.write(f"关节 z 方向的角加速度为: {angular_acceleration_z:.6f} rad/s²")
-            st.write(f"关节 z 方向的角速度为: {angular_velocity_z:.6f} rad/s")
-        else:
-            st.write("无法计算关节 z 方向的角加速度或角速度。")
+            st.write("无法计算转动惯量，可能是因为角加速度为零。")
 
 if __name__ == '__main__':
     mode = st.radio("请选择功能模块", ("关节角速度与加速度计算"))
