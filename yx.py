@@ -67,6 +67,45 @@ def calculate_displacement(position_data, start_frame, end_frame):
     
     return displacement
 
+# 计算关节角速度
+def calculate_joint_angular_velocity(angular_acceleration, initial_angular_velocity=0, delta_time=1):
+    return initial_angular_velocity + angular_acceleration * delta_time
+
+# 计算关节角加速度
+def calculate_joint_angular_acceleration(torque, inertia):
+    if inertia != 0:
+        return torque / inertia
+    else:
+        return None
+
+# 计算转动惯量（倒推计算）
+def calculate_inertia_from_torque_and_acceleration(torque, angular_acceleration):
+    if angular_acceleration != 0:
+        return torque / angular_acceleration
+    else:
+        return None
+
+# 倒推计算角加速度与角速度
+def calculate_angular_acceleration_and_velocity(torque_x, torque_y, torque_z, mass, angle_x, angle_y, angle_z, linear_velocity_x, linear_velocity_y, linear_velocity_z, delta_time, joint_acceleration_x, joint_acceleration_y, joint_acceleration_z):
+    # 使用输入的关节加速度倒推计算转动惯量
+    inertia_x = calculate_inertia_from_torque_and_acceleration(torque_x, joint_acceleration_x)
+    inertia_y = calculate_inertia_from_torque_and_acceleration(torque_y, joint_acceleration_y)
+    inertia_z = calculate_inertia_from_torque_and_acceleration(torque_z, joint_acceleration_z)
+
+    if None in [inertia_x, inertia_y, inertia_z]:
+        return None, None, None, None, None, None
+
+    # 计算每个方向的角速度
+    angular_velocity_x = calculate_joint_angular_velocity(joint_acceleration_x, angle_x, delta_time)
+    angular_velocity_y = calculate_joint_angular_velocity(joint_acceleration_y, angle_y, delta_time)
+    angular_velocity_z = calculate_joint_angular_velocity(joint_acceleration_z, angle_z, delta_time)
+
+    # 合成角加速度和角速度
+    total_angular_acceleration = np.sqrt(joint_acceleration_x**2 + joint_acceleration_y**2 + joint_acceleration_z**2)
+    total_angular_velocity = np.sqrt(angular_velocity_x**2 + angular_velocity_y**2 + angular_velocity_z**2)
+
+    return total_angular_acceleration, total_angular_velocity, inertia_x, inertia_y, inertia_z
+
 # 主函数 - 关节角度、角速度和角加速度计算
 def main_joint_kinematics():
     st.title("💪关节角速度与加速度计算工具")
@@ -108,25 +147,12 @@ def main_joint_kinematics():
             st.write(f"关节 x 方向的转动惯量为: {inertia_x:.6f} kg·m²")
             st.write(f"关节 y 方向的转动惯量为: {inertia_y:.6f} kg·m²")
             st.write(f"关节 z 方向的转动惯量为: {inertia_z:.6f} kg·m²")
+        else:
+            st.write("无法计算转动惯量，可能是因为角加速度为零。")
 
-# 在主函数中添加其他模块
-def main():
-    mode = st.radio("请选择功能模块", ("关节角速度与加速度计算", "位置与时间数据处理"))
+if __name__ == '__main__':
+    mode = st.radio("请选择功能模块", ("关节角速度与加速度计算",))
 
     if mode == "关节角速度与加速度计算":
         main_joint_kinematics()
 
-    elif mode == "位置与时间数据处理":
-        st.title("位置与时间数据处理")
-        position_data = load_position_data()
-        if position_data is not None:
-            st.write("位置数据上传成功！")
-            st.write(position_data.head())
-
-        time_data = load_time_data()
-        if time_data is not None:
-            st.write("时间数据上传成功！")
-            st.write(time_data.head())
-
-if __name__ == '__main__':
-    main()
