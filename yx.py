@@ -67,93 +67,95 @@ def calculate_displacement(position_data, start_frame, end_frame):
     
     return displacement
 
+
 # 计算关节角速度
-def calculate_joint_angular_velocity(joint_angles, time_data):
-    angular_velocities = []
-    for i in range(1, len(joint_angles)):
-        delta_angle = joint_angles[i] - joint_angles[i-1]
-        delta_time = time_data[i] - time_data[i-1]
-        angular_velocity = delta_angle / delta_time if delta_time != 0 else 0
-        angular_velocities.append(angular_velocity)
-    return np.array(angular_velocities)
+def calculate_joint_angular_velocity(angular_acceleration, initial_angular_velocity=0, delta_time=1):
+    return initial_angular_velocity + angular_acceleration * delta_time
 
 # 计算关节角加速度
-def calculate_joint_angular_acceleration(angular_velocities, time_data):
-    angular_accelerations = []
-    for i in range(1, len(angular_velocities)):
-        delta_angular_velocity = angular_velocities[i] - angular_velocities[i-1]
-        delta_time = time_data[i] - time_data[i-1]
-        angular_acceleration = delta_angular_velocity / delta_time if delta_time != 0 else 0
-        angular_accelerations.append(angular_acceleration)
-    return np.array(angular_accelerations)
+def calculate_joint_angular_acceleration(torque, inertia):
+    if inertia != 0:
+        return torque / inertia
+    else:
+        return None
 
-# 主函数 - 速度与位移计算
-def main_position_speed():
-    st.title("💓🐑🌃（🥋速度与位移计算工具）")
+# 计算转动惯量（通过物体质量和半径）
+def calculate_inertia(mass, radius):
+    return mass * radius**2
 
-    # 加载位置数据和时间数据
-    position_data = load_position_data()
-    time_data = load_time_data()
+# 倒推计算角加速度与角速度
+def calculate_angular_acceleration_and_velocity(torque_x, torque_y, torque_z, mass_x, mass_y, mass_z, radius, angle_x, angle_y, angle_z, linear_velocity_x, linear_velocity_y, linear_velocity_z, delta_time):
+    # 计算每个方向的转动惯量
+    inertia_x = calculate_inertia(mass_x, radius)
+    inertia_y = calculate_inertia(mass_y, radius)
+    inertia_z = calculate_inertia(mass_z, radius)
 
-    if position_data is not None and time_data is not None:
-        st.write("🐯再辛苦您一下，看一眼🙈位置数据预览：")
-        st.write(position_data.head())
+    # 计算每个方向的角加速度
+    angular_acceleration_x = calculate_joint_angular_acceleration(torque_x, inertia_x)
+    angular_acceleration_y = calculate_joint_angular_acceleration(torque_y, inertia_y)
+    angular_acceleration_z = calculate_joint_angular_acceleration(torque_z, inertia_z)
 
-        st.write("👭最后看一眼时间数据预览：")
-        st.write(time_data.head())
+    if angular_acceleration_x is not None and angular_acceleration_y is not None and angular_acceleration_z is not None:
+        # 计算每个方向的角速度
+        angular_velocity_x = calculate_joint_angular_velocity(angular_acceleration_x, angle_x, delta_time)
+        angular_velocity_y = calculate_joint_angular_velocity(angular_acceleration_y, angle_y, delta_time)
+        angular_velocity_z = calculate_joint_angular_velocity(angular_acceleration_z, angle_z, delta_time)
 
-        # 计算单帧瞬时速度
-        frame = st.number_input("高抬贵手🤸下请您输入查询的帧（Frame）：", min_value=1, max_value=len(position_data), value=1)
-        if st.button("👅你真棒！终于计算出了瞬时速度💖~"):
-            instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
-            if instantaneous_speed is not None:
-                st.write(f"帧 {frame} 的瞬时速度为: {instantaneous_speed:.6f} 米/秒")
-            else:
-                st.write("该帧的数据不存在。")
-
-        # 计算帧范围内的平均速度和位移
-        start_frame = st.number_input("请输入起始帧：", min_value=1, max_value=len(position_data), value=1)
-        end_frame = st.number_input("请输入结束帧：", min_value=1, max_value=len(position_data), value=len(position_data))
-
-        if st.button("😃计算选定帧范围的平均速度与位移🧮"):
-            if start_frame <= end_frame:
-                avg_speed = calculate_average_speed(position_data, time_data, start_frame, end_frame)
-                displacement = calculate_displacement(position_data, start_frame, end_frame)
-
-                if avg_speed is not None and displacement is not None:
-                    st.write(f"帧 {start_frame} 到 {end_frame} 的平均速度为: {avg_speed:.6f} 米/秒")
-                    st.write(f"帧 {start_frame} 到 {end_frame} 的位移为: {displacement:.6f} 米")
-                else:
-                    st.write("选定帧范围内的数据不存在。")
-            else:
-                st.error("起始帧必须小于等于结束帧，请重新输入。")
+        return angular_acceleration_x, angular_acceleration_y, angular_acceleration_z, angular_velocity_x, angular_velocity_y, angular_velocity_z
+    else:
+        return None, None, None, None, None, None
 
 # 主函数 - 关节角度、角速度和角加速度计算
 def main_joint_kinematics():
     st.title("💪关节角速度与加速度计算工具")
 
-    # 上传时间数据
-    time_data = load_time_data()
-    
-    if time_data is not None:
-        # 关节角度输入
-        joint_angles = st.text_area("请输入关节角度数据（以逗号分隔）：", value="0, 10, 20, 30")
-        joint_angles = np.array([float(angle) for angle in joint_angles.split(',')])
+    # 手动输入数据
+    torque_x = st.number_input("请输入关节力矩 x (N·m)：", value=0.0)
+    torque_y = st.number_input("请输入关节力矩 y (N·m)：", value=0.0)
+    torque_z = st.number_input("请输入关节力矩 z (N·m)：", value=0.0)
 
-        # 计算关节角速度和角加速度
-        if len(joint_angles) > 1:
-            angular_velocities = calculate_joint_angular_velocity(joint_angles, time_data['time'])
-            angular_accelerations = calculate_joint_angular_acceleration(angular_velocities, time_data['time'])
+    linear_velocity_x = st.number_input("请输入关节线速度 x (m/s)：", value=0.0)
+    linear_velocity_y = st.number_input("请输入关节线速度 y (m/s)：", value=0.0)
+    linear_velocity_z = st.number_input("请输入关节线速度 z (m/s)：", value=0.0)
 
-            st.write("计算出的关节角速度：", angular_velocities)
-            st.write("计算出的关节角加速度：", angular_accelerations)
+    mass_x = st.number_input("请输入物体质量 x (kg)：", value=1.0)
+    mass_y = st.number_input("请输入物体质量 y (kg)：", value=1.0)
+    mass_z = st.number_input("请输入物体质量 z (kg)：", value=1.0)
+
+    angle_x = st.number_input("请输入关节角度 x (rad)：", value=0.0)
+    angle_y = st.number_input("请输入关节角度 y (rad)：", value=0.0)
+    angle_z = st.number_input("请输入关节角度 z (rad)：", value=0.0)
+
+    delta_time = st.number_input("请输入时间间隔 (秒)：", value=1.0)
+
+    if st.button("计算关节角速度与角加速度"):
+        # 调用计算函数
+        angular_acceleration_x, angular_acceleration_y, angular_acceleration_z, angular_velocity_x, angular_velocity_y, angular_velocity_z = calculate_angular_acceleration_and_velocity(
+            torque_x, torque_y, torque_z, mass_x, mass_y, mass_z, radius=1.0, angle_x=angle_x, angle_y=angle_y, angle_z=angle_z,
+            linear_velocity_x=linear_velocity_x, linear_velocity_y=linear_velocity_y, linear_velocity_z=linear_velocity_z, delta_time=delta_time
+        )
+
+        if angular_acceleration_x is not None:
+            st.write(f"关节 x 方向的角加速度为: {angular_acceleration_x:.6f} rad/s²")
+            st.write(f"关节 x 方向的角速度为: {angular_velocity_x:.6f} rad/s")
+        else:
+            st.write("无法计算关节 x 方向的角加速度或角速度。")
+
+        if angular_acceleration_y is not None:
+            st.write(f"关节 y 方向的角加速度为: {angular_acceleration_y:.6f} rad/s²")
+            st.write(f"关节 y 方向的角速度为: {angular_velocity_y:.6f} rad/s")
+        else:
+            st.write("无法计算关节 y 方向的角加速度或角速度。")
+
+        if angular_acceleration_z is not None:
+            st.write(f"关节 z 方向的角加速度为: {angular_acceleration_z:.6f} rad/s²")
+            st.write(f"关节 z 方向的角速度为: {angular_velocity_z:.6f} rad/s")
+        else:
+            st.write("无法计算关节 z 方向的角加速度或角速度。")
 
 if __name__ == '__main__':
-    mode = st.radio("请选择功能模块", ("速度与位移计算", "关节角速度与加速度计算"))
-    
-    if mode == "速度与位移计算":
-        main_position_speed()
-    else:
-        main_joint_kinematics()
+    mode = st.radio("请选择功能模块", ("关节角速度与加速度计算"))
 
+    if mode == "关节角速度与加速度计算":
+        main_joint_kinematics()
 
