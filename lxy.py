@@ -16,9 +16,10 @@ def calculate_combined_angle(x, y, z):
     # 计算合角度 (示例: 使用 atan2 和 sqrt 计算)
     return np.degrees(np.arctan2(np.sqrt(x**2 + y**2), z))
 
-# 计算某个帧范围内的最大最小角度
+# 计算某个帧范围内的最大最小角度和对应的帧号
 def calculate_max_min_angle_in_range(angle_data, start_frame, end_frame):
     angles = []
+    frames = []
 
     # 获取指定帧范围内的角度数据
     for index, row in angle_data.iterrows():
@@ -26,13 +27,16 @@ def calculate_max_min_angle_in_range(angle_data, start_frame, end_frame):
             x, y, z = row['X'], row['Y'], row['Z']
             angle = calculate_combined_angle(x, y, z)
             angles.append(angle)
+            frames.append(row['Frame'])
     
     if angles:
         max_angle = max(angles)
         min_angle = min(angles)
-        return max_angle, min_angle
+        max_angle_frame = frames[angles.index(max_angle)]  # 获取最大角度对应的帧号
+        min_angle_frame = frames[angles.index(min_angle)]  # 获取最小角度对应的帧号
+        return max_angle, max_angle_frame, min_angle, min_angle_frame
     else:
-        return None, None
+        return None, None, None, None
 
 # 计算某个帧的角度
 def get_angle_for_frame(angle_data, frame):
@@ -60,10 +64,10 @@ def main():
 
         if st.button("🧑‍🏫计算选定帧范围的最大最小角度"):
             if start_frame <= end_frame:
-                max_angle, min_angle = calculate_max_min_angle_in_range(angle_data, start_frame, end_frame)
+                max_angle, max_angle_frame, min_angle, min_angle_frame = calculate_max_min_angle_in_range(angle_data, start_frame, end_frame)
                 if max_angle is not None and min_angle is not None:
-                    st.write(f"帧 {start_frame} 到 {end_frame} 范围内的最大角度为: {max_angle:.2f}°")
-                    st.write(f"帧 {start_frame} 到 {end_frame} 范围内的最小角度为: {min_angle:.2f}°")
+                    st.write(f"帧 {start_frame} 到 {end_frame} 范围内的最大角度为: {max_angle:.2f}° (对应帧号: {max_angle_frame})")
+                    st.write(f"帧 {start_frame} 到 {end_frame} 范围内的最小角度为: {min_angle:.2f}° (对应帧号: {min_angle_frame})")
                 else:
                     st.write("该帧范围内没有角度数据。")
             else:
@@ -81,3 +85,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
