@@ -11,13 +11,14 @@ def load_position_data():
         return position_data
     return None
 
-# 上传角度数据并读取
-def load_angle_data():
-    uploaded_angle_file = st.file_uploader("请上传您的角度数据文件（含X、Y、Z三列）", type=["xlsx", "csv"])
-    if uploaded_angle_file is not None:
-        angle_data = pd.read_excel(uploaded_angle_file) if uploaded_angle_file.name.endswith('.xlsx') else pd.read_csv(uploaded_angle_file)
-        angle_data.columns = angle_data.columns.str.strip()
-        return angle_data
+# 上传时间数据并读取
+def load_time_data():
+    uploaded_time_file = st.file_uploader("😻辛苦您上传您的时间⏱️数据文件", type=["xlsx", "csv"])
+    if uploaded_time_file is not None:
+        time_data = pd.read_excel(uploaded_time_file) if uploaded_time_file.name.endswith('.xlsx') else pd.read_csv(uploaded_time_file)
+        time_data.columns = time_data.columns.str.strip()
+        st.write("辛苦您的眼睛了🫡，看一眼时间数据列名：", time_data.columns)
+        return time_data
     return None
 
 # 计算瞬时速度（xyz方向）
@@ -39,37 +40,12 @@ def calculate_instantaneous_speed(position_data, time_data, frame):
     time = time_frame_data['time'].values[0]
 
     # 计算x、y、z方向的瞬时速度
+    # 注意：瞬时速度是位移/时间差，我们这里的“位移”是当前帧的坐标值
     speed_x = x / time if time != 0 else 0
     speed_y = y / time if time != 0 else 0
     speed_z = z / time if time != 0 else 0
     
     return speed_x, speed_y, speed_z, np.sqrt(speed_x**2 + speed_y**2 + speed_z**2)
-
-# 计算角度（与Z轴的夹角）
-def calculate_angle(x, y, z):
-    # 计算向量与Z轴的夹角
-    dot_product = x * 0 + y * 0 + z * 1  # Z轴单位向量 (0, 0, 1)
-    magnitude = np.sqrt(x**2 + y**2 + z**2)
-    
-    # 计算角度 (弧度 -> 角度)
-    angle = np.arccos(dot_product / magnitude) * (180 / np.pi)
-    return angle
-
-# 计算最大角度和最小角度
-def calculate_max_min_angle(angle_data):
-    angles = angle_data[['X', 'Y', 'Z']].apply(lambda row: calculate_angle(row['X'], row['Y'], row['Z']), axis=1)
-    max_angle = angles.max()
-    min_angle = angles.min()
-    return max_angle, min_angle, angles
-
-# 计算指定帧的角度
-def get_angle_for_frame(angle_data, frame):
-    frame_data = angle_data[angle_data['Frame'] == frame]
-    if not frame_data.empty:
-        x, y, z = frame_data[['X', 'Y', 'Z']].values[0]
-        angle = calculate_angle(x, y, z)
-        return angle
-    return None
 
 # 计算帧范围内的平均速度（xyz方向）
 def calculate_average_speed(position_data, time_data, start_frame, end_frame):
@@ -112,36 +88,18 @@ def calculate_displacement(position_data, start_frame, end_frame):
 
 # 主函数
 def main():
-    st.title("💓🐑🌃（🥋速度与角度计算工具）")
+    st.title("💓🐑🌃（🥋速度与位移计算工具）")
 
     # 加载位置数据和时间数据
     position_data = load_position_data()
     time_data = load_time_data()
-    angle_data = load_angle_data()
 
-    if position_data is not None and time_data is not None and angle_data is not None:
+    if position_data is not None and time_data is not None:
         st.write("🐯再辛苦您一下，看一眼🙈位置数据预览：")
         st.write(position_data.head())
 
         st.write("👭最后看一眼时间数据预览：")
         st.write(time_data.head())
-
-        st.write("📉看一眼您的角度数据预览：")
-        st.write(angle_data.head())
-
-        # 计算角度的最大最小值
-        max_angle, min_angle, angles = calculate_max_min_angle(angle_data)
-        st.write(f"最大角度: {max_angle:.2f}°")
-        st.write(f"最小角度: {min_angle:.2f}°")
-
-        # 输入帧并计算角度
-        frame = st.number_input("请输入查询的帧（Frame）以查看角度：", min_value=1, max_value=len(angle_data), value=1)
-        if st.button("🧑‍🏫计算指定帧的角度"):
-            angle = get_angle_for_frame(angle_data, frame)
-            if angle is not None:
-                st.write(f"帧 {frame} 的角度为: {angle:.2f}°")
-            else:
-                st.write("该帧的角度数据不存在。")
 
         # 计算单帧瞬时速度
         frame = st.number_input("高抬贵手🤸下请您输入查询的帧（Frame）：", min_value=1, max_value=len(position_data), value=1)
