@@ -118,16 +118,6 @@ def calculate_speed_and_displacement():
                 st.error("起始帧必须小于等于结束帧，请重新输入。")
 
 # 倒推计算角加速度与角速度
-def calculate_angular_acceleration_and_velocity(torque, mass, radius, angle, linear_velocity, delta_time):
-    inertia = calculate_inertia(mass, radius)  # 计算转动惯量
-    angular_acceleration = calculate_joint_angular_acceleration(torque, inertia)  # 计算角加速度
-    if angular_acceleration is not None:
-        angular_velocity = calculate_joint_angular_velocity(angular_acceleration, angle, delta_time)  # 根据角加速度计算角速度
-        return angular_acceleration, angular_velocity
-    else:
-        return None, None
-
-# 功能2：倒推角加速度与角速度计算
 def calculate_angular_speed_and_acceleration():
     st.title("🌀 计算倒推的角加速度与角速度")
 
@@ -165,8 +155,6 @@ def calculate_angular_speed_and_acceleration():
         else:
             st.write(f"角加速度为: {angular_acceleration:.6f} rad/s²")
             st.write(f"角速度为: {angular_velocity:.6f} rad/s")
-
-
 
 # 主函数
 def main():
