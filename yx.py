@@ -1,5 +1,4 @@
-
-# 这段代码改为将两个功能相互独立出来，可以选择用哪个功能的形式import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 
