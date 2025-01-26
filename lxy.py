@@ -54,6 +54,7 @@ def main():
         st.write(angle_data.head())
 
         # 输入帧范围并计算角度的最大最小值
+        st.subheader("请输入计算角度的帧范围：")
         start_frame = st.number_input("请输入起始帧：", min_value=1, max_value=len(angle_data), value=1)
         end_frame = st.number_input("请输入结束帧：", min_value=1, max_value=len(angle_data), value=len(angle_data))
 
@@ -69,6 +70,7 @@ def main():
                 st.error("起始帧必须小于等于结束帧，请重新输入。")
 
         # 输入帧并计算角度
+        st.subheader("请输入查询角度的帧：")
         frame = st.number_input("请输入查询的帧（Frame）以查看角度：", min_value=1, max_value=len(angle_data), value=1)
         if st.button("🧑‍🏫计算指定帧的角度"):
             angle = get_angle_for_frame(angle_data, frame)
