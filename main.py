@@ -60,8 +60,8 @@ def calculate_instantaneous_speed(position_data, time_data, frame):
     instantaneous_speed = displacement / time_diff
     
     return speed_x, speed_y, speed_z, instantaneous_speed
-    
-    # 计算平均速度
+
+# 计算平均速度
 def calculate_average_speed(position_data, time_data, start_frame, end_frame):
     # 获取起始帧和结束帧的位置数据
     start_pos = position_data[position_data['Frame'] == start_frame]
@@ -98,6 +98,27 @@ def calculate_average_speed(position_data, time_data, start_frame, end_frame):
     avg_speed_z = displacement_z / time_diff
     
     return avg_speed_x, avg_speed_y, avg_speed_z, avg_speed
+
+# 计算位移
+def calculate_displacement(position_data, start_frame, end_frame):
+    # 获取起始帧和结束帧的位置数据
+    start_pos = position_data[position_data['Frame'] == start_frame]
+    end_pos = position_data[position_data['Frame'] == end_frame]
+
+    if start_pos.empty or end_pos.empty:
+        return None, None, None, None  # 返回空值以便显示错误
+
+    # 获取起始帧和结束帧的位置数据
+    x1, y1, z1 = start_pos['X'].values[0], start_pos['Y'].values[0], start_pos['Z'].values[0]
+    x2, y2, z2 = end_pos['X'].values[0], end_pos['Y'].values[0], end_pos['Z'].values[0]
+
+    # 计算位移
+    displacement_x = x2 - x1
+    displacement_y = y2 - y1
+    displacement_z = z2 - z1
+    displacement = np.sqrt(displacement_x**2 + displacement_y**2 + displacement_z**2)
+
+    return displacement, displacement_x, displacement_y, displacement_z
 
 # 主函数
 def main():
