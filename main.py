@@ -40,7 +40,7 @@ def calculate_instantaneous_speed(position_data, time_data, frame):
     time = time_frame_data['time'].values[0]
 
     # 计算x、y、z方向的瞬时速度
-    # 注意：瞬时速度是位移/时间差，我们这里的“位移”是当前帧的坐标值
+    # 注意：瞬时速度是位移/时间差，这里简单处理为当前帧的坐标值除以时间
     speed_x = x / time if time != 0 else 0
     speed_y = y / time if time != 0 else 0
     speed_z = z / time if time != 0 else 0
@@ -137,3 +137,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
