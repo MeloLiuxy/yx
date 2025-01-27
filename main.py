@@ -23,78 +23,81 @@ def load_time_data():
 
 # 计算瞬时速度（xyz方向）
 def calculate_instantaneous_speed(position_data, time_data, frame):
+    if frame == 1:
+        return None, None, None, None  # 第一帧没有前一帧来计算速度
+
     position_frame_data = position_data[position_data['Frame'] == frame]
+    position_prev_frame_data = position_data[position_data['Frame'] == frame - 1]
     time_frame_data = time_data[time_data['Frame'] == frame]
+    time_prev_frame_data = time_data[time_data['Frame'] == frame - 1]
 
-    if position_frame_data.empty or time_frame_data.empty:
-        return None, None, None, None  # 返回空值以便显示错误
+    if position_frame_data.empty or position_prev_frame_data.empty or time_frame_data.empty or time_prev_frame_data.empty:
+        return None, None, None, None  # 如果数据不存在，返回空值
 
-    # 获取当前帧的位置数据
-    x, y, z = position_frame_data['X'].values[0], position_frame_data['Y'].values[0], position_frame_data['Z'].values[0]
+    # 获取当前帧和前一帧的位置数据
+    x1, y1, z1 = position_prev_frame_data['X'].values[0], position_prev_frame_data['Y'].values[0], position_prev_frame_data['Z'].values[0]
+    x2, y2, z2 = position_frame_data['X'].values[0], position_frame_data['Y'].values[0], position_frame_data['Z'].values[0]
     
-    # 获取时间数据
-    if 'time' not in time_data.columns:
-        st.error("时间数据中没有找到 'time' 列，请检查数据格式。")
-        return None, None, None, None
+    # 获取当前帧和前一帧的时间数据
+    time1 = time_prev_frame_data['time'].values[0]
+    time2 = time_frame_data['time'].values[0]
 
-    time = time_frame_data['time'].values[0]
+    if time2 == time1:
+        return None, None, None, None  # 如果时间差为零，无法计算速度
+
+    # 计算位移和时间差
+    displacement_x = x2 - x1
+    displacement_y = y2 - y1
+    displacement_z = z2 - z1
+    displacement = np.sqrt(displacement_x**2 + displacement_y**2 + displacement_z**2)
+    
+    time_diff = time2 - time1
 
     # 计算x、y、z方向的瞬时速度
-    # 注意：瞬时速度是位移/时间差，这里简单处理为当前帧的坐标值除以时间
-    speed_x = x / time if time != 0 else 0
-    speed_y = y / time if time != 0 else 0
-    speed_z = z / time if time != 0 else 0
+    speed_x = displacement_x / time_diff
+    speed_y = displacement_y / time_diff
+    speed_z = displacement_z / time_diff
+    instantaneous_speed = displacement / time_diff
     
-    return speed_x, speed_y, speed_z, np.sqrt(speed_x**2 + speed_y**2 + speed_z**2)
-
+    return speed_x, speed_y, speed_z, instantaneous_speed
+    
+    # 计算平均速度
 def calculate_average_speed(position_data, time_data, start_frame, end_frame):
-    total_distance = 0  # 累计总位移
-    total_time = 0  # 累计总时间
-    count = 0
-
-    for frame in range(start_frame, end_frame + 1):
-        speed_x, speed_y, speed_z, instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
-        if speed_x is not None:
-            # 累计位移
-            total_distance += instantaneous_speed  # 计算总位移
-
-            # 累计时间
-            time_frame_data = time_data[time_data['Frame'] == frame]
-            if not time_frame_data.empty:
-                total_time += time_frame_data['time'].values[0]  # 累计时间
-
-            count += 1
-    
-    # 计算平均速度（总位移除以总时间）
-    avg_speed = total_distance / total_time if total_time > 0 else None
-    
-    # 分别计算x、y、z方向的平均速度
-    avg_speed_x = total_distance / count if count > 0 else None
-    avg_speed_y = total_distance / count if count > 0 else None
-    avg_speed_z = total_distance / count if count > 0 else None
-    
-    return avg_speed_x, avg_speed_y, avg_speed_z, avg_speed
-
-
-# 计算帧范围内的位移
-def calculate_displacement(position_data, start_frame, end_frame):
+    # 获取起始帧和结束帧的位置数据
     start_pos = position_data[position_data['Frame'] == start_frame]
     end_pos = position_data[position_data['Frame'] == end_frame]
 
     if start_pos.empty or end_pos.empty:
         return None, None, None, None  # 返回空值以便显示错误
 
+    # 获取起始帧和结束帧的时间数据
+    time_start = time_data[time_data['Frame'] == start_frame]['time'].values[0]
+    time_end = time_data[time_data['Frame'] == end_frame]['time'].values[0]
+
+    # 计算起始帧和结束帧之间的时间差
+    time_diff = time_end - time_start
+    if time_diff == 0:
+        return None, None, None, None  # 如果时间差为零，无法计算速度
+
+    # 获取起始帧和结束帧的位置数据
     x1, y1, z1 = start_pos['X'].values[0], start_pos['Y'].values[0], start_pos['Z'].values[0]
     x2, y2, z2 = end_pos['X'].values[0], end_pos['Y'].values[0], end_pos['Z'].values[0]
 
-    displacement = np.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)
-    
-    # 位移的 x、y、z 分量
+    # 计算位移
     displacement_x = x2 - x1
     displacement_y = y2 - y1
     displacement_z = z2 - z1
+    displacement = np.sqrt(displacement_x**2 + displacement_y**2 + displacement_z**2)
+
+    # 计算平均速度
+    avg_speed = displacement / time_diff
+
+    # 分别计算x、y、z方向的平均速度
+    avg_speed_x = displacement_x / time_diff
+    avg_speed_y = displacement_y / time_diff
+    avg_speed_z = displacement_z / time_diff
     
-    return displacement, displacement_x, displacement_y, displacement_z
+    return avg_speed_x, avg_speed_y, avg_speed_z, avg_speed
 
 # 主函数
 def main():
