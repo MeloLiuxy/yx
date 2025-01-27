@@ -47,24 +47,27 @@ def calculate_instantaneous_speed(position_data, time_data, frame):
     
     return speed_x, speed_y, speed_z, np.sqrt(speed_x**2 + speed_y**2 + speed_z**2)
 
-# 计算帧范围内的平均速度（xyz方向）
+# 计算帧范围内的平均速度（xyz方向）及总速度
 def calculate_average_speed(position_data, time_data, start_frame, end_frame):
     total_speed_x = total_speed_y = total_speed_z = 0
+    total_distance = 0  # 累计总位移
     count = 0
 
     for frame in range(start_frame, end_frame + 1):
-        speed_x, speed_y, speed_z, _ = calculate_instantaneous_speed(position_data, time_data, frame)
+        speed_x, speed_y, speed_z, instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
         if speed_x is not None:
             total_speed_x += speed_x
             total_speed_y += speed_y
             total_speed_z += speed_z
+            total_distance += instantaneous_speed  # 计算总位移
             count += 1
     
     avg_speed_x = total_speed_x / count if count > 0 else None
     avg_speed_y = total_speed_y / count if count > 0 else None
     avg_speed_z = total_speed_z / count if count > 0 else None
+    avg_total_speed = total_distance / count if count > 0 else None  # 平均总速度
     
-    return avg_speed_x, avg_speed_y, avg_speed_z
+    return avg_speed_x, avg_speed_y, avg_speed_z, avg_total_speed
 
 # 计算帧范围内的位移
 def calculate_displacement(position_data, start_frame, end_frame):
@@ -114,13 +117,13 @@ def main():
             else:
                 st.write("该帧的数据不存在。")
 
-        # 计算帧范围内的平均速度
+        # 计算帧范围内的平均速度及总速度
         start_frame = st.number_input("请输入起始帧：", min_value=1, max_value=len(position_data), value=1)
         end_frame = st.number_input("请输入结束帧：", min_value=1, max_value=len(position_data), value=len(position_data))
 
         if st.button("😃计算选定帧范围的平均速度🧮"):
             if start_frame <= end_frame:
-                avg_speed_x, avg_speed_y, avg_speed_z = calculate_average_speed(position_data, time_data, start_frame, end_frame)
+                avg_speed_x, avg_speed_y, avg_speed_z, avg_total_speed = calculate_average_speed(position_data, time_data, start_frame, end_frame)
                 displacement, disp_x, disp_y, disp_z = calculate_displacement(position_data, start_frame, end_frame)
 
                 if avg_speed_x is not None and displacement is not None:
@@ -128,6 +131,7 @@ def main():
                     st.write(f"X方向平均速度: {avg_speed_x:.6f} 米/秒")
                     st.write(f"Y方向平均速度: {avg_speed_y:.6f} 米/秒")
                     st.write(f"Z方向平均速度: {avg_speed_z:.6f} 米/秒")
+                    st.write(f"总平均速度: {avg_total_speed:.6f} 米/秒")  # 显示总平均速度
                     st.write(f"帧 {start_frame} 到 {end_frame} 的位移为: {displacement:.6f} 米")
                     st.write(f"位移分量：X={disp_x}, Y={disp_y}, Z={disp_z}")
                 else:
@@ -137,4 +141,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
