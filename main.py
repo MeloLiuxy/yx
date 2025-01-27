@@ -47,27 +47,34 @@ def calculate_instantaneous_speed(position_data, time_data, frame):
     
     return speed_x, speed_y, speed_z, np.sqrt(speed_x**2 + speed_y**2 + speed_z**2)
 
-# 计算帧范围内的平均速度（xyz方向）及总速度
 def calculate_average_speed(position_data, time_data, start_frame, end_frame):
-    total_speed_x = total_speed_y = total_speed_z = 0
     total_distance = 0  # 累计总位移
+    total_time = 0  # 累计总时间
     count = 0
 
     for frame in range(start_frame, end_frame + 1):
         speed_x, speed_y, speed_z, instantaneous_speed = calculate_instantaneous_speed(position_data, time_data, frame)
         if speed_x is not None:
-            total_speed_x += speed_x
-            total_speed_y += speed_y
-            total_speed_z += speed_z
+            # 累计位移
             total_distance += instantaneous_speed  # 计算总位移
+
+            # 累计时间
+            time_frame_data = time_data[time_data['Frame'] == frame]
+            if not time_frame_data.empty:
+                total_time += time_frame_data['time'].values[0]  # 累计时间
+
             count += 1
     
-    avg_speed_x = total_speed_x / count if count > 0 else None
-    avg_speed_y = total_speed_y / count if count > 0 else None
-    avg_speed_z = total_speed_z / count if count > 0 else None
-    avg_total_speed = total_distance / count if count > 0 else None  # 平均总速度
+    # 计算平均速度（总位移除以总时间）
+    avg_speed = total_distance / total_time if total_time > 0 else None
     
-    return avg_speed_x, avg_speed_y, avg_speed_z, avg_total_speed
+    # 分别计算x、y、z方向的平均速度
+    avg_speed_x = total_distance / count if count > 0 else None
+    avg_speed_y = total_distance / count if count > 0 else None
+    avg_speed_z = total_distance / count if count > 0 else None
+    
+    return avg_speed_x, avg_speed_y, avg_speed_z, avg_speed
+
 
 # 计算帧范围内的位移
 def calculate_displacement(position_data, start_frame, end_frame):
